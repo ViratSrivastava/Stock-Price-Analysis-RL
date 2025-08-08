@@ -1,1 +1,3 @@
 *stock_rl_env
+.env
+*.pyc
