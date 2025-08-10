@@ -77,12 +77,17 @@ class StockTradingSystem:
             import traceback
             self.logger.error(traceback.format_exc())
 
-    def validate(self, symbol: str):
+    def validate(self, symbol: str, model_path: str = None):
         """Backtest a trained model"""
-        self.logger.info(f"🔍 Validating model for {symbol}")
+        if model_path:
+            self.logger.info(f"🔍 Validating model for {symbol} using specific model: {model_path}")
+        else:
+            self.logger.info(f"🔍 Validating model for {symbol}")
+            self.logger.info(f"🔍 Using best available model for {symbol}")
 
         try:
-            backtest = self.validator.backtest_model(symbol)
+            # Pass the model_path parameter to backtest_model
+            backtest = self.validator.backtest_model(symbol, model_path=model_path)
             self.logger.info(f"📈 Backtest results: {backtest}")
 
         except Exception as e:
@@ -170,6 +175,9 @@ def main():
                         help="Data frequency to use: daily or intraday (default: daily)")
     parser.add_argument("--data-dir", type=str, default="data",
                         help="Directory containing CSV files (default: data)")
+    parser.add_argument("--model-path", type=str, default=None,
+                       help="Path to specific model file for validation")
+
     args = parser.parse_args()
 
     system = StockTradingSystem(data_dir=args.data_dir)
@@ -180,9 +188,10 @@ def main():
         elif args.command == "train-all":
             system.train_all(args.episodes)
         elif args.command == "validate":
-            system.validate(args.symbol)
+            # FIXED: Pass the model_path argument
+            system.validate(args.symbol, model_path=args.model_path)
         elif args.command == "info":
-            system.info(args.symbol if args.symbol != "AAPL" else None)  # Don't default to AAPL for info
+            system.info(args.symbol if args.symbol != "AAPL" else None)
 
     except KeyboardInterrupt:
         print("\n🛑 Operation cancelled by user")
