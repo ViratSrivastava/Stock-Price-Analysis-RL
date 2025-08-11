@@ -282,4 +282,3 @@ class DQNAgent:
         probabilities = exp_values / np.sum(exp_values)
         
         return probabilities
-
