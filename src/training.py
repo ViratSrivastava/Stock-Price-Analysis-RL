@@ -432,6 +432,44 @@ class ModelTrainer:
             self.logger.error(f"Error loading model for {symbol}: {e}")
             return None
 
+    def load_model_from_path(self, model_path: str) -> Optional[DQNAgent]:
+        """Load model from a specific file path"""
+        try:
+            if not os.path.exists(model_path):
+                self.logger.error(f"Model file does not exist: {model_path}")
+                return None
+            
+            self.logger.info(f"Loading model from: {model_path}")
+            
+            # Load metadata to get state dimensions
+            metadata_path = model_path.replace('.pth', '_metadata.json')
+            if os.path.exists(metadata_path):
+                with open(metadata_path, 'r') as f:
+                    metadata = json.load(f)
+                state_dim = metadata['state_dim']
+                self.logger.info(f"Using state_dim from metadata: {state_dim}")
+            else:
+                self.logger.warning("No metadata found, using default state dimension")
+                state_dim = 52  # Adjust based on your feature count
+            
+            # Create agent with GPU support and load model
+            agent = DQNAgent(
+                state_dim=state_dim,
+                use_gpu=self.use_gpu,
+                num_workers=self.num_workers,
+                batch_size=self.default_batch_size
+            )
+            
+            # Load the model
+            agent.load_model(model_path)
+            self.logger.info(f"Successfully loaded model from {model_path}")
+            return agent
+            
+        except Exception as e:
+            self.logger.error(f"Failed to load model from {model_path}: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            return None
     def plot_training_progress(self, symbol: str, save_plot: bool = True):
         """Plot training progress"""
         try:
